@@ -1,0 +1,44 @@
+{
+    "name": "@auioc/rollup-plugin-css",
+    "version": "1.0.0",
+    "description": "Rollup plugin - add css to bundle",
+    "keywords": [
+        "rollup",
+        "plugin",
+        "rollup-plugin"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/auioc/rollup-plugins",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/auioc/rollup-plugins.git"
+    },
+    "author": {
+        "name": "AUIOC",
+        "url": "https://www.auioc.org"
+    },
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.mjs",
+        "default": "./dist/index.cjs"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "rollup -c"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "clean-css": "^5.3.3"
+    },
+    "devDependencies": {
+        "@types/clean-css": "^4.2.11"
+    }
+}
