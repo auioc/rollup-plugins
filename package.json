@@ -1,0 +1,13 @@
+{
+    "name": "@auioc/rollup-plugins",
+    "private": true,
+    "type": "module",
+    "devDependencies": {
+        "@rollup/plugin-typescript": "^11.1.6",
+        "@types/node": "^26.6.3",
+        "rollup": "^4.18.1",
+        "rollup-plugin-dts": "^6.5.1",
+        "tslib": "^2.6.3",
+        "typescript": "^6.0.3"
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "target": "ESNext",
+        "module": "Preserve",
+        "moduleDetection": "force",
+        "types": ["node"],
+        "allowJs": true,
+
+        "moduleResolution": "bundler",
+        "verbatimModuleSyntax": true,
+        "noEmit": true,
+
+        "skipLibCheck": true,
+        "strict": true,
+        "alwaysStrict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "noImplicitReturns": true
+    },
+    "exclude": ["node_modules", "dist"]
+}
