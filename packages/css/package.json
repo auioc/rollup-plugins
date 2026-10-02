@@ -8,10 +8,11 @@
         "rollup-plugin"
     ],
     "license": "MIT",
-    "homepage": "https://github.com/auioc/rollup-plugins",
+    "homepage": "https://github.com/auioc/rollup-plugins/tree/main/packages/css",
     "repository": {
         "type": "git",
-        "url": "https://github.com/auioc/rollup-plugins.git"
+        "url": "https://github.com/auioc/rollup-plugins.git",
+        "directory": "packages/css"
     },
     "author": {
         "name": "AUIOC",
