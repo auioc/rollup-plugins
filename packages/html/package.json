@@ -1,0 +1,47 @@
+{
+    "name": "@auioc/rollup-plugin-html",
+    "version": "1.0.0",
+    "publishConfig": {
+        "access": "public"
+    },
+    "description": "Rollup plugin - create html file from template to serve bundled js/css",
+    "keywords": [
+        "rollup",
+        "plugin",
+        "rollup-plugin",
+        "html",
+        "template"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/auioc/rollup-plugins/tree/main/packages/html",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/auioc/rollup-plugins.git",
+        "directory": "packages/html"
+    },
+    "author": {
+        "name": "AUIOC",
+        "url": "https://www.auioc.org"
+    },
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.mjs",
+        "default": "./dist/index.cjs"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "rollup -c"
+    },
+    "dependencies": {
+        "html-minifier-terser": "^7.2.0"
+    },
+    "devDependencies": {
+        "@types/html-minifier-terser": "^7.0.2"
+    }
+}
