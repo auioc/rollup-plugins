@@ -27,6 +27,16 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/css:
+    dependencies:
+      clean-css:
+        specifier: ^5.3.3
+        version: 5.3.3
+    devDependencies:
+      '@types/clean-css':
+        specifier: ^4.2.11
+        version: 4.2.11
+
 packages:
 
   '@babel/code-frame@8.0.6':
@@ -220,11 +230,18 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@types/clean-css@4.2.11':
+    resolution: {integrity: sha512-Y8n81lQVTAfP2TOdtJJEsCoYl1AnOkqDqMvXb9/7pfgZZ7r8YrEyurrAvAoAjHOGXKRybay+5CsExqIH6liccw==}
+
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
   '@types/node@26.6.3':
     resolution: {integrity: sha512-dsqMQQoeTLqu9wynDD00q573mNzso3IdQOAfHRJqLCcmCFPoGo9A1bDpUcv/9tnKpErQWv9uKeGfl37EIS02Yg==}
+
+  clean-css@5.3.3:
+    resolution: {integrity: sha512-D5J+kHaVb/wKSFcyyV75uCn8fiY4sV38XJoe4CUyGQ+mOU/fMVYUdH1hJC+CJQ5uY3EnW27SbJYS4X8BiLrAFg==}
+    engines: {node: '>= 10.0'}
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
@@ -285,6 +302,10 @@ packages:
     resolution: {integrity: sha512-w4+GKyTBqshj84F1GF3s2zxAPFZPEmNkCbQtqilsYS7GsksmX6VoV7UggfZg8sUHCCOkBe7UtQp6fZwbH311FQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
+
+  source-map@0.6.1:
+    resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
+    engines: {node: '>=0.10.0'}
 
   supports-preserve-symlinks-flag@1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
@@ -426,11 +447,20 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.63.6':
     optional: true
 
+  '@types/clean-css@4.2.11':
+    dependencies:
+      '@types/node': 26.6.3
+      source-map: 0.6.1
+
   '@types/estree@1.0.9': {}
 
   '@types/node@26.6.3':
     dependencies:
       undici-types: 8.9.0
+
+  clean-css@5.3.3:
+    dependencies:
+      source-map: 0.6.1
 
   convert-source-map@2.0.0: {}
 
@@ -511,6 +541,8 @@ snapshots:
       '@rollup/rollup-win32-x64-gnu': 4.63.6
       '@rollup/rollup-win32-x64-msvc': 4.63.6
       fsevents: 2.3.3
+
+  source-map@0.6.1: {}
 
   supports-preserve-symlinks-flag@1.0.0: {}
 

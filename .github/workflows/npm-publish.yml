@@ -1,0 +1,72 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+      - '*@v*'
+
+permissions:
+  id-token: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: 'production'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Parse tag
+        id: parse
+        run: |
+          PKG_NAME="${GITHUB_REF_NAME%@*}"
+          TAG_VERSION="${GITHUB_REF_NAME##*@}"
+          TAG_VERSION="${TAG_VERSION#v}"
+
+          PKG_JSON="packages/$PKG_NAME/package.json"
+
+          if [ ! -f "$PKG_JSON" ]; then
+            echo "::error::Package directory not found: $PKG_JSON"
+            exit 1
+          fi
+
+          PKG_NAME=$(jq -r '.name' "$PKG_JSON")
+          PKG_VERSION=$(jq -r '.version' "$PKG_JSON")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Version mismatch for $PKG_NAME: Tag=$TAG_VERSION, Package=$PKG_VERSION"
+            exit 1
+          fi
+
+          echo "name=$PKG_NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install and Build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run --filter "${{ steps.parse.outputs.name }}" build
+          pnpm pack --filter "${{ steps.parse.outputs.name }}"
+
+      - name: Publish to NPM
+        run: |
+          pnpm publish --filter "${{ steps.parse.outputs.name }}" --access public --provenance --registry=https://registry.npmjs.org --no-git-checks
+
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pnpm config set //npm.pkg.github.com/:_authToken=$GITHUB_TOKEN
+          pnpm publish --filter "${{ steps.parse.outputs.name }}" --access public --registry=https://npm.pkg.github.com --no-git-checks
