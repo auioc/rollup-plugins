@@ -1,8 +1,8 @@
-import fs from 'fs';
 import {
     minify as minifyHTML,
     type Options as MinifierOptions,
 } from 'html-minifier-terser';
+import fs from 'node:fs';
 import { default as Path } from 'node:path';
 import type { EmittedFile, Plugin } from 'rollup';
 
@@ -18,11 +18,39 @@ export interface Options {
      * @default 'index.html'
      */
     output?: string;
+    /**
+     * Whether to inject bundled CSS files.
+     * @default true
+     */
     injectStyle?: boolean;
+    /**
+     * Whether to inject bundled JS files.
+     * Use `'module'` to add `type="module"`.
+     * @default true
+     */
     injectScript?: boolean | 'module';
+    /**
+     * Placeholder comment replaced by CSS tags.
+     * @default '<!-- inject:style -->'
+     */
     styleTagPlaceholder?: string;
+    /**
+     * Placeholder comment replaced by script tags.
+     * @default '<!-- inject:script -->'
+     */
     scriptTagPlaceholder?: string;
+    /**
+     * Tag name used for strip comment blocks.
+     *
+     * Content within `<!-- strip --><!-- /strip -->` (including the markup) will be removed from the final output.
+     * @default 'strip'
+     */
     stripTag?: string;
+    /**
+     * Minify the output HTML.
+     * @see {@link MinifierOptions}
+     * @default false
+     */
     minify?: boolean | MinifierOptions;
 }
 
@@ -35,7 +63,7 @@ export default function createHTML(options: Options): Plugin {
         styleTagPlaceholder = '<!-- inject:style -->',
         scriptTagPlaceholder = '<!-- inject:script -->',
         stripTag = 'strip',
-        minify,
+        minify = false,
     } = options;
 
     let template = '';
@@ -58,7 +86,7 @@ export default function createHTML(options: Options): Plugin {
         async generateBundle(outputOptions, bundle) {
             let html = template;
 
-            // <!-- strip --> ... <!-- /strip -->
+            // Remove <!-- strip --> ... <!-- /strip -->
             const stripRegex = new RegExp(
                 `<!--\\s*${stripTag}\\s*-->[\\s\\S]*?<!--\\s*/${stripTag}\\s*-->`,
                 'g'

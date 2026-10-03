@@ -41,7 +41,7 @@ export default {
 | `styleTagPlaceholder`  | `string`                       | `'<!-- inject:style -->'`  | Placeholder comment replaced by CSS tags.                                                                                                                       |
 | `scriptTagPlaceholder` | `string`                       | `'<!-- inject:script -->'` | Placeholder comment replaced by script tags.                                                                                                                    |
 | `stripTag`             | `string`                       | `'strip'`                  | Tag name used for strip comment blocks.                                                                                                                         |
-| `minify`               | `boolean` \| `MinifierOptions` | `undefined`                | Minify the output HTML with [html-minifier-terser](https://www.npmjs.com/package/html-minifier-terser). Pass an object to forward html-minifier-terser options. |
+| `minify`               | `boolean` \| `MinifierOptions` | `false`                    | Minify the output HTML with [html-minifier-terser](https://www.npmjs.com/package/html-minifier-terser). Pass an object to forward html-minifier-terser options. |
 
 ## How It Works
 
@@ -78,7 +78,7 @@ If placeholders are not present, tags are inserted before `</head>` (CSS) or `</
 
 ### 2. Stripping markup
 
-Wrap content you want removed from the final output (e.g., development-only markup) in strip comments:
+Content (e.g., development-only markup) within stripping markup (including the markup) will be removed from the final output:
 
 ```html
 <!-- strip -->
