@@ -8,6 +8,11 @@ import type { EmittedFile, Plugin } from 'rollup';
 
 const NAME = 'html';
 
+const DEFAULT_TERSER_OPTIONS: MinifierOptions = {
+    collapseWhitespace: true,
+    removeComments: true,
+};
+
 export type Asset =
     | string
     | {
@@ -183,7 +188,10 @@ export default function createHTML(options: Options): Plugin {
             }
 
             if (minify) {
-                const minifyOptions = typeof minify === 'object' ? minify : {};
+                const minifyOptions =
+                    typeof minify === 'object'
+                        ? minify
+                        : DEFAULT_TERSER_OPTIONS;
                 html = await minifyHTML(html, minifyOptions);
             }
 

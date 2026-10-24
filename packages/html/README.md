@@ -91,7 +91,7 @@ Assets are injected into the template in one of two ways:
 When the bundle is generated, the plugin collects:
 
 - **CSS assets** (any emitted asset ending in `.css`)
-- **JS chunks** that are entry points or dynamic entry points (files ending in `.js`)
+- **JS chunks** that are entry points (files ending in `.js`)
 
 #### External Assets
 
