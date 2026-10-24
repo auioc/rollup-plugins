@@ -8,6 +8,14 @@ import type { EmittedFile, Plugin } from 'rollup';
 
 const NAME = 'html';
 
+export type Asset =
+    | string
+    | {
+          url: string;
+          integrity?: string;
+          crossorigin?: 'anonymous' | 'use-credentials';
+      };
+
 export interface Options {
     /**
      * Path of template `.html` file
@@ -29,6 +37,14 @@ export interface Options {
      * @default true
      */
     injectScript?: boolean | 'module';
+    /**
+     * External assets to inject.
+     * @default {}
+     */
+    external?: {
+        style?: Asset[];
+        script?: Asset[];
+    };
     /**
      * Placeholder comment replaced by CSS tags.
      * @default '<!-- inject:style -->'
@@ -52,6 +68,28 @@ export interface Options {
      * @default false
      */
     minify?: boolean | MinifierOptions;
+}
+
+function styleTag(asset: Asset) {
+    if (typeof asset === 'string') {
+        return `<link rel="stylesheet" href="${asset}">`;
+    }
+    const integrity = asset.integrity ? ` integrity="${asset.integrity}"` : '';
+    const crossorigin = asset.crossorigin
+        ? ` crossorigin="${asset.crossorigin}"`
+        : '';
+    return `<link rel="stylesheet" href="${asset.url}"${integrity}${crossorigin}>`;
+}
+
+function scriptTag(asset: Asset, module: boolean) {
+    if (typeof asset === 'string') {
+        return `<script ${module ? 'type="module" ' : ''}src="${asset}"></script>`;
+    }
+    const integrity = asset.integrity ? ` integrity="${asset.integrity}"` : '';
+    const crossorigin = asset.crossorigin
+        ? ` crossorigin="${asset.crossorigin}"`
+        : '';
+    return `<script ${module ? 'type="module" ' : ''}src="${asset.url}"${integrity}${crossorigin}></script>`;
 }
 
 export default function createHTML(options: Options): Plugin {
@@ -98,7 +136,7 @@ export default function createHTML(options: Options): Plugin {
 
             for (const [fileName, chunk] of Object.entries(bundle)) {
                 if (chunk.type === 'chunk' && fileName.endsWith('.js')) {
-                    if (chunk.isEntry || chunk.isDynamicEntry) {
+                    if (chunk.isEntry) {
                         jsFiles.push(fileName);
                     }
                 } else if (chunk.type === 'asset') {
@@ -108,32 +146,39 @@ export default function createHTML(options: Options): Plugin {
                 }
             }
 
-            if (injectStyle && cssFiles.length > 0) {
-                const tags = cssFiles
-                    .map((file) => `<link rel="stylesheet" href="${file}">`)
-                    .join('\n');
-                if (html.includes(styleTagPlaceholder)) {
-                    html = html.replace(styleTagPlaceholder, tags);
-                } else if (html.includes('</head>')) {
-                    html = html.replace('</head>', `  ${tags}\n</head>`);
-                } else {
-                    html = `${tags}\n${html}`;
+            const external = options.external ?? { style: [], script: [] };
+
+            if (injectStyle) {
+                const externalTags = (external.style ?? []).map(styleTag);
+                const bundledTags = cssFiles.map(styleTag);
+                const tags = [...externalTags, ...bundledTags].join('\n');
+
+                if (tags) {
+                    if (html.includes(styleTagPlaceholder)) {
+                        html = html.replace(styleTagPlaceholder, tags);
+                    } else if (html.includes('</head>')) {
+                        html = html.replace('</head>', `  ${tags}\n</head>`);
+                    } else {
+                        html = `${tags}\n${html}`;
+                    }
                 }
             }
 
-            if (injectScript && jsFiles.length > 0) {
-                const tags = jsFiles
-                    .map(
-                        (file) =>
-                            `<script ${injectScript === 'module' ? 'type="module" ' : ''}src="${file}"></script>`
-                    )
-                    .join('\n');
-                if (html.includes(scriptTagPlaceholder)) {
-                    html = html.replace(scriptTagPlaceholder, tags);
-                } else if (html.includes('</body>')) {
-                    html = html.replace('</body>', `  ${tags}\n</body>`);
-                } else {
-                    html += `\n${tags}`;
+            if (injectScript) {
+                const _toScriptTag = (asset: Asset) =>
+                    scriptTag(asset, injectScript === 'module');
+                const externalTags = (external.script ?? []).map(_toScriptTag);
+                const bundledScriptTags = jsFiles.map(_toScriptTag);
+                const tags = [...externalTags, ...bundledScriptTags].join('\n');
+
+                if (tags) {
+                    if (html.includes(scriptTagPlaceholder)) {
+                        html = html.replace(scriptTagPlaceholder, tags);
+                    } else if (html.includes('</body>')) {
+                        html = html.replace('</body>', `  ${tags}\n</body>`);
+                    } else {
+                        html += `\n${tags}`;
+                    }
                 }
             }
 
