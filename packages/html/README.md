@@ -32,17 +32,18 @@ export default {
 
 ## Options
 
-| Option                 | Type                                    | Default                    | Description                                                                                                                                                     |
-| ---------------------- | --------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`             | `string`                                |                            | **Required**. Path to the template `.html` file, resolved relative to `process.cwd()`.                                                                          |
-| `output`               | `string`                                | `'index.html'`             | Output file name of the emitted HTML file.                                                                                                                      |
-| `injectStyle`          | `boolean`                               | `true`                     | Whether to inject styles.                                                                                                                                       |
-| `injectScript`         | `boolean` \| `'module'`                 | `true`                     | Whether to inject scripts. Use `'module'` to add `type="module"`.                                                                                               |
-| `external`             | `{ style?: Asset[]; script?: Asset[] }` | `{ }`                      | External assets to inject. Their tags are placed before the bundled ones.                                                                                       |
-| `styleTagPlaceholder`  | `string`                                | `'<!-- inject:style -->'`  | Placeholder comment replaced by CSS tags.                                                                                                                       |
-| `scriptTagPlaceholder` | `string`                                | `'<!-- inject:script -->'` | Placeholder comment replaced by script tags.                                                                                                                    |
-| `stripTag`             | `string`                                | `'strip'`                  | Tag name used for strip comment blocks.                                                                                                                         |
-| `minify`               | `boolean` \| `MinifierOptions`          | `false`                    | Minify the output HTML with [html-minifier-terser](https://www.npmjs.com/package/html-minifier-terser). Pass an object to forward html-minifier-terser options. |
+| Option                 | Type                                                 | Default                    | Description                                                                                                                                                     |
+| ---------------------- | ---------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`             | `string`                                             |                            | **Required**. Path to the template `.html` file, resolved relative to `process.cwd()`.                                                                          |
+| `output`               | `string`                                             | `'index.html'`             | Output file name of the emitted HTML file.                                                                                                                      |
+| `injectStyle`          | `boolean`                                            | `true`                     | Whether to inject styles.                                                                                                                                       |
+| `injectScript`         | `boolean` \| `'module'`                              | `true`                     | Whether to inject scripts. Use `'module'` to add `type="module"`.                                                                                               |
+| `external`             | `{ style?: Asset[]; script?: Asset[] }`              | `{ }`                      | External assets to inject. Their tags are placed before the bundled ones. See [External Assets](#external-assets).                                              |
+| `styleTagPlaceholder`  | `string`                                             | `'<!-- inject:style -->'`  | Placeholder comment replaced by CSS tags.                                                                                                                       |
+| `scriptTagPlaceholder` | `string`                                             | `'<!-- inject:script -->'` | Placeholder comment replaced by script tags.                                                                                                                    |
+| `stripTag`             | `string`                                             | `'strip'`                  | Tag name used for strip comment blocks.                                                                                                                         |
+| `minify`               | `boolean` \| `MinifierOptions`                       | `false`                    | Minify the output HTML with [html-minifier-terser](https://www.npmjs.com/package/html-minifier-terser). Pass an object to forward html-minifier-terser options. |
+| `cacheBusting`         | `CacheBusting` (`boolean` \| `string` \| `Function`) | `false`                    | Append a query string to bundled asset URLs. See [Cache busting](#4-cache-busting).                                                                             |
 
 - Asset
 
@@ -54,6 +55,18 @@ export default {
               integrity?: string;
               crossorigin?: 'anonymous' | 'use-credentials';
           };
+    ```
+
+- CacheBusting
+
+    ```typescript
+    type CacheBusting =
+        | boolean
+        | string
+        | ((
+              fileName: string,
+              content: string | Uint8Array
+          ) => string | undefined | false);
     ```
 
 ## How It Works
@@ -161,6 +174,40 @@ html({
 ```
 
 See [`html-minifier-terser` options](https://github.com/terser/html-minifier-terser#options-quick-reference) for the full list.
+
+### 4. Cache busting
+
+>**NOTE:** External assets injected through the `external` option are not affected.
+
+Enable cache busting to append a query string to the URLs of bundled assets. The content hash is generated automatically:
+
+```js
+html({
+    template: 'src/index.html',
+    cacheBusting: true,
+});
+```
+
+This produces tags such as `<script src="bundle.js?v=1a2b3c4d"></script>`.
+
+You can also provide the query string yourself. The value is appended without the leading `?`:
+
+```js
+html({
+    template: 'src/index.html',
+    cacheBusting: 'v=1.2.3',
+});
+```
+
+For per-asset control, pass a function receiving the asset file name and its content. Return an empty string to skip that asset:
+
+```js
+html({
+    template: 'src/index.html',
+    cacheBusting: (fileName, content) =>
+        fileName.endsWith('.js') ? `v=${content.length}` : 'v=1.2.3',
+});
+```
 
 ## License
 

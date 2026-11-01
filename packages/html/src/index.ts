@@ -2,6 +2,7 @@ import {
     minify as minifyHTML,
     type Options as MinifierOptions,
 } from 'html-minifier-terser';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import { default as Path } from 'node:path';
 import type { EmittedFile, Plugin } from 'rollup';
@@ -20,6 +21,14 @@ export type Asset =
           integrity?: string;
           crossorigin?: 'anonymous' | 'use-credentials';
       };
+
+export type CacheBusting =
+    | boolean
+    | string
+    | ((
+          fileName: string,
+          content: string | Uint8Array
+      ) => string | undefined | false);
 
 export interface Options {
     /**
@@ -73,6 +82,47 @@ export interface Options {
      * @default false
      */
     minify?: boolean | MinifierOptions;
+    /**
+     * Append a query string to bundled asset URLs to bust caches.
+     *
+     * External assets are not affected.
+     * @default false
+     */
+    cacheBusting?: CacheBusting;
+}
+
+function appendQuery(url: string, query: string) {
+    const hashIndex = url.indexOf('#');
+    const hash = hashIndex === -1 ? '' : url.slice(hashIndex);
+    const base = hashIndex === -1 ? url : url.slice(0, hashIndex);
+    const separator = base.includes('?') ? '&' : '?';
+    return `${base}${separator}${query}${hash}`;
+}
+
+function cacheBustingQuery(
+    cacheBusting: CacheBusting,
+    fileName: string,
+    content: string | Uint8Array
+) {
+    if (typeof cacheBusting === 'string') {
+        return cacheBusting;
+    }
+    if (typeof cacheBusting === 'function') {
+        return cacheBusting(fileName, content) || '';
+    }
+    return `v=${createHash('sha256').update(content).digest('hex').slice(0, 8)}`;
+}
+
+function assetURL(
+    fileName: string,
+    content: string | Uint8Array,
+    cacheBusting: CacheBusting
+) {
+    if (!cacheBusting) {
+        return fileName;
+    }
+    const query = cacheBustingQuery(cacheBusting, fileName, content);
+    return query ? appendQuery(fileName, query) : fileName;
 }
 
 function styleTag(asset: Asset) {
@@ -107,6 +157,7 @@ export default function createHTML(options: Options): Plugin {
         scriptTagPlaceholder = '<!-- inject:script -->',
         stripTag = 'strip',
         minify = false,
+        cacheBusting = false,
     } = options;
 
     let template = '';
@@ -136,17 +187,21 @@ export default function createHTML(options: Options): Plugin {
             );
             html = html.replace(stripRegex, '');
 
-            const jsFiles = [];
-            const cssFiles = [];
+            const jsFiles: string[] = [];
+            const cssFiles: string[] = [];
 
             for (const [fileName, chunk] of Object.entries(bundle)) {
                 if (chunk.type === 'chunk' && fileName.endsWith('.js')) {
                     if (chunk.isEntry) {
-                        jsFiles.push(fileName);
+                        jsFiles.push(
+                            assetURL(fileName, chunk.code, cacheBusting)
+                        );
                     }
                 } else if (chunk.type === 'asset') {
                     if (fileName.endsWith('.css')) {
-                        cssFiles.push(fileName);
+                        cssFiles.push(
+                            assetURL(fileName, chunk.source, cacheBusting)
+                        );
                     }
                 }
             }
