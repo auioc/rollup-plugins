@@ -42,19 +42,26 @@ export interface Options {
     output?: string;
     /**
      * Whether to inject bundled CSS files.
+     *
+     * Pass a function to decide per-asset whether to inject it.
+     * The function receives the asset URL (for external assets) or the
+     * bundled file name.
      * @default true
      */
-    injectStyle?: boolean;
+    injectStyle?: boolean | ((id: string) => boolean);
     /**
      * Whether to inject bundled JS files.
+     *
      * Use `'module'` to add `type="module"`.
+     *
+     * Pass a function to decide per-asset whether (and how) to inject it.
+     * The function receives the asset URL (for external assets) or the
+     * bundled file name, return `false` to skip injection,
+     * `'module'` to inject with `type="module"`, or `true` to inject a
+     * normal script tag.
      * @default true
      */
-    injectScript?: boolean | 'module';
-    /**
-     * External assets to inject.
-     * @default {}
-     */
+    injectScript?: boolean | 'module' | ((id: string) => boolean | 'module');
     external?: {
         style?: Asset[];
         script?: Asset[];
@@ -209,8 +216,15 @@ export default function createHTML(options: Options): Plugin {
             const external = options.external ?? { style: [], script: [] };
 
             if (injectStyle) {
-                const externalTags = (external.style ?? []).map(styleTag);
-                const bundledTags = cssFiles.map(styleTag);
+                const predicate =
+                    typeof injectStyle === 'function'
+                        ? injectStyle
+                        : () => true;
+
+                const externalTags = (external.style ?? [])
+                    .filter((x) => predicate(typeof x === 'string' ? x : x.url))
+                    .map(styleTag);
+                const bundledTags = cssFiles.filter(predicate).map(styleTag);
                 const tags = [...externalTags, ...bundledTags].join('\n');
 
                 if (tags) {
@@ -225,11 +239,26 @@ export default function createHTML(options: Options): Plugin {
             }
 
             if (injectScript) {
-                const _toScriptTag = (asset: Asset) =>
-                    scriptTag(asset, injectScript === 'module');
+                const predicate =
+                    typeof injectScript === 'function'
+                        ? injectScript
+                        : () => injectScript;
+
+                const _toScriptTag = (asset: Asset) => {
+                    const type = predicate(
+                        typeof asset === 'string' ? asset : asset.url
+                    );
+                    if (type) {
+                        return scriptTag(asset, type === 'module');
+                    }
+                    return undefined;
+                };
+
                 const externalTags = (external.script ?? []).map(_toScriptTag);
                 const bundledScriptTags = jsFiles.map(_toScriptTag);
-                const tags = [...externalTags, ...bundledScriptTags].join('\n');
+                const tags = [...externalTags, ...bundledScriptTags]
+                    .filter((x) => !!x)
+                    .join('\n');
 
                 if (tags) {
                     if (html.includes(scriptTagPlaceholder)) {
